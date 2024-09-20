@@ -55,7 +55,7 @@ app.delete("/api/reservations/:id", async (req, res, next) => {
 app.post("/api/reservations", async (req, res, next) => {
   try {
     const newReservation = await createReservation(req.body.date, req.body.party_count, req.body.restaurant_id, req.body.customer_id);
-    res.send(newReservation);
+    res.status(201).send(newReservation);
   } catch (err) {
     console.log("ERROR ADDING RESERVATION: ", err);
   }
