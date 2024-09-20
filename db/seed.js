@@ -1,14 +1,14 @@
 const client = require("./client.js");
-const { createCustomer } = require("./customer.js");
-const { createRestaurant } = require("./restaurant.js");
-const { createReservation } = require("./reservation.js");
+const { createUser } = require("./user.js");
+const { createProduct } = require("./product.js");
+const { createFavorite } = require("./favorite.js");
 
 const dropTables = async () => {
   try {
     await client.query(`
-            DROP TABLE IF EXISTS reservation;
-            DROP TABLE IF EXISTS restaurant;
-            DROP TABLE IF EXISTS customer;
+            DROP TABLE IF EXISTS favorite;
+            DROP TABLE IF EXISTS product;
+            DROP TABLE IF EXISTS "user";
         `);
   } catch (err) {
     console.log("ERROR DROPPING TABLES: ", err);
@@ -18,22 +18,22 @@ const dropTables = async () => {
 const createTables = async () => {
   try {
     await client.query(`
-            CREATE TABLE customer (
+            CREATE TABLE "user" (
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+            username VARCHAR(50) NOT NULL UNIQUE,
+            password VARCHAR(255) 
+            );
+
+            CREATE TABLE product (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             name VARCHAR(50) NOT NULL 
             );
 
-            CREATE TABLE restaurant (
+            CREATE TABLE favorite (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            name VARCHAR(50) NOT NULL 
-            );
-
-            CREATE TABLE reservation (
-            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            date DATE NOT NULL,
-            party_count INTEGER NOT NULL,
-            restaurant_id UUID REFERENCES restaurant(id) NOT NULL,
-            customer_id UUID REFERENCES customer(id) NOT NULL
+            product_id UUID REFERENCES product(id) NOT NULL,
+            user_id UUID REFERENCES "user"(id) NOT NULL,
+            UNIQUE (product_id, user_id)
             );
         `);
   } catch (err) {
@@ -48,29 +48,23 @@ const init = async () => {
 
   await createTables();
 
-  const daniel = await createCustomer('Daniel');
+  const user1 = await createUser('dcullison17', 'WhoDats2TheDome');
 
-  const macie = await createCustomer('Macie');
+  const user2 = await createUser('maciematherne3', 'Cubs4Life');
 
-  const joe = await createCustomer('Joe');
+  const user3 = await createUser('gerald633', 'test123');
 
-  const drew = await createCustomer('Drew');
+  const product1 = await createProduct('Iphone 14');
 
-  const outback = await createRestaurant('Outback');
+  const product2 = await createProduct('Iphone 15');
 
-  const nobu = await createRestaurant('Nobu');
+  const product3 = await createProduct('Iphone 16');
 
-  const sake = await createRestaurant('Sake');
+  await createFavorite(product1.id, user1.id);
 
-  const reginellis = await createRestaurant('Reginellis');
+  await createFavorite(product2.id, user2.id);
 
-  await createReservation('Oct 13, 2024', 3, outback.id, daniel.id);
-
-  await createReservation('Dec 16, 2024', 5, nobu.id, macie.id);
-
-  await createReservation('Dec 9, 1999', 2, sake.id, joe.id);
-
-  await createReservation('Dec 23, 2024', 7, reginellis.id, drew.id);
+  await createFavorite(product3.id, user3.id);
 };
 
 init();

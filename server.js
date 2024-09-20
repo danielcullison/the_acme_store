@@ -6,58 +6,67 @@ client.connect();
 
 app.use(express.json());
 
-const { fetchCustomers } = require("./db/customer.js");
-const { fetchRestaurants } = require("./db/restaurant.js");
-const { fetchReservations, createReservation, destroyReservation } = require("./db/reservation.js");
+const { fetchUsers } = require("./db/user.js");
+const { fetchProducts } = require("./db/product.js");
+const {
+  fetchFavorites,
+  createFavorite,
+  destroyFavorite,
+} = require("./db/favorite.js");
 
-app.get("/api/customers", async (req, res, next) => {
+app.get("/api/users", async (req, res, next) => {
   try {
-    const allCustomers = await fetchCustomers();
+    const allUsers = await fetchUsers();
 
-    res.send(allCustomers);
+    res.send(allUsers);
   } catch (err) {
-    console.log("ERROR GETTING CUSTOMERS: ", err);
+    console.log("ERROR GETTING USERS: ", err);
   }
 });
 
-app.get("/api/restaurants", async (req, res, next) => {
+app.get("/api/products", async (req, res, next) => {
   try {
-    const allRestaurants = await fetchRestaurants();
+    const allProducts = await fetchProducts();
 
-    res.send(allRestaurants);
+    res.send(allProducts);
   } catch (err) {
-    console.log("ERROR GETTING RESTAURANTS: ", err);
+    console.log("ERROR GETTING PRODUCTS: ", err);
   }
 });
 
-app.get("/api/reservations", async (req, res, next) => {
+app.get("/api/users/:id/favorites", async (req, res, next) => {
   try {
-    const allReservations = await fetchReservations();
+    const userId = req.params.id;
+    const userFavorites = await fetchFavorites(userId);
 
-    res.send(allReservations);
+    res.send(userFavorites);
   } catch (err) {
-    console.log("ERROR GETTING RESERVATIONS: ", err);
+    console.log("ERROR GETTING USER FAVORITES: ", err);
   }
 });
 
-app.delete("/api/reservations/:id", async (req, res, next) => {
+app.delete("/api/users/:userId/favorites/:id", async (req, res, next) => {
   try {
-    const reservationId = req.params.id;
+    const favoriteId = req.params.id;
+    const userId = req.params.userId;
 
-    await destroyReservation(reservationId);
+    await destroyFavorite(favoriteId);
 
     res.status(204).send();
   } catch (err) {
-    console.log("ERROR DELETING RESERVATION: ", err);
+    console.log("ERROR DELETING FAVORITE: ", err);
   }
 });
 
-app.post("/api/reservations", async (req, res, next) => {
+app.post("/api/users/:id/favorites", async (req, res, next) => {
   try {
-    const newReservation = await createReservation(req.body.date, req.body.party_count, req.body.restaurant_id, req.body.customer_id);
-    res.status(201).send(newReservation);
+    const userId = req.params.id;
+    const { product_id } = req.body;
+
+    const newFavorite = await createFavorite(product_id, userId);
+    res.status(201).send(newFavorite);
   } catch (err) {
-    console.log("ERROR ADDING RESERVATION: ", err);
+    console.log("ERROR ADDING FAVORITE: ", err);
   }
 });
 
